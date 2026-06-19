@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # Keep the GitHub Actions used in CI up to date. There are no package
+  # ecosystems to track — Recall has no runtime dependencies.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"

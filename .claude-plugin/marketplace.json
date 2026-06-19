@@ -1,0 +1,20 @@
+{
+  "name": "recall",
+  "owner": {
+    "name": "Raiyan Yahya"
+  },
+  "metadata": {
+    "description": "Fully-local project memory for Claude Code — session logging plus a vendored TextRank summary, with no API key or external model.",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "recall",
+      "source": ".",
+      "description": "Fully-local project memory for Claude Code: logs each session to .recall/history.md and condenses it into .recall/context.md with a vendored TF-IDF + TextRank summarizer. No API key, no external model.",
+      "author": {
+        "name": "Raiyan Yahya"
+      }
+    }
+  ]
+}

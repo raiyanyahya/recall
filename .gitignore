@@ -1,0 +1,13 @@
+# Recall project memory (uncomment to keep personal; comment out to commit as team memory)
+.recall/
+
+# Python / tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local Claude Code settings (machine-specific; never ship with the plugin)
+.claude/settings.local.json

@@ -1,0 +1,82 @@
+name: Bug report
+description: Something in Recall isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug! Recall is fully local — it makes no network
+        calls and uses no API key. If `claude` itself shows *"Invalid API key"*,
+        that's the CLI's own auth (usually a stale `ANTHROPIC_API_KEY` env var),
+        not Recall — see the checklist below.
+
+        **Do not report security vulnerabilities here** — see
+        [SECURITY.md](../blob/main/SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Load the plugin with `claude --plugin-dir .`
+        2. …
+        3. Run `/recall:save`
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part?
+      options:
+        - SessionStart (resume / context injection)
+        - History capture (.recall/history.md)
+        - "/recall:save (context.md generation)"
+        - Summarizer output quality
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: summarizer
+    attributes:
+      label: Summarizer path
+      description: Shown in the "_Generated locally by Recall — …_" line of context.md.
+      options:
+        - "TextRank (numpy-accelerated)"
+        - "TextRank (pure Python)"
+        - Not sure
+  - type: input
+    id: ccversion
+    attributes:
+      label: Claude Code version
+      placeholder: "output of `claude --version`"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS and Python version
+      placeholder: "e.g. macOS 15 / Python 3.12"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Any error text. **Redact secrets before pasting.**
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues for a duplicate.
+          required: true
+        - label: This is not a security vulnerability (those go through SECURITY.md).
+          required: true
+        - label: If I saw "Invalid API key", I confirmed it persists after `unset ANTHROPIC_API_KEY` (otherwise it's a CLI auth issue, not Recall).

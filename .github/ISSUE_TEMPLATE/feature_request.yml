@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an improvement to Recall
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem?
+      description: The use case or pain point this would address.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Fits Recall's principles
+      description: See CONTRIBUTING.md.
+      options:
+        - label: This keeps the default path local — no network calls, no API key, no telemetry.
+          required: true
+        - label: This adds no required runtime dependency (numpy may only be an optional accelerator).
+          required: true

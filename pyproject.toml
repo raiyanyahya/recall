@@ -1,0 +1,24 @@
+# Tooling config only — Recall ships no installable package and has no runtime
+# dependencies (numpy is an optional accelerator, never required).
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["claude-code-context-plugin.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.bandit]
+# Reviewed and accepted, with justification:
+#  B404/B603/B607 — git is the only subprocess. It's invoked with a static argv
+#    list (never shell=True), found on PATH by name, and hardened against
+#    untrusted-repo config (see scripts/common.py:git_info).
+#  B110 — the lifecycle hooks deliberately `except Exception: pass` so a failure
+#    in Recall can never crash a Claude Code session. This is a hard design
+#    requirement (see CONTRIBUTING.md), used only in hook entry points.
+skips = ["B404", "B603", "B607", "B110"]

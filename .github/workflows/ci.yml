@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate plugin + config JSON
+        run: |
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json \
+                   hooks/hooks.json recall.config.json; do
+            python3 -c "import json,sys; json.load(open('$f')); print('ok', '$f')"
+          done
+
+  lint:
+    name: Lint & SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade ruff bandit
+      - name: Ruff
+        run: ruff check scripts tests
+      - name: Bandit (Python SAST)
+        run: bandit -c pyproject.toml -r scripts
+
+  test:
+    name: Tests (py${{ matrix.python-version }} / ${{ matrix.numpy }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        numpy: ["with-numpy", "no-numpy"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pytest
+      - name: Install numpy (accelerated summarizer path)
+        if: matrix.numpy == 'with-numpy'
+        run: python -m pip install numpy
+      - name: Run tests
+        run: pytest
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
