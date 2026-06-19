@@ -10,6 +10,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Issue templates (bug report, feature request) and a pull request template.
 - This changelog.
 
+### Changed
+- Bumped GitHub Actions: `actions/checkout` v4→v7, `actions/setup-python`
+  v5→v6, `gitleaks/gitleaks-action` v2→v3, `github/codeql-action` v3→v4.
+
+### Fixed
+- Granted the secret-scan job `pull-requests: read` so gitleaks can list PR
+  commits on `pull_request` events (was failing with HTTP 403).
+
 ## [0.2.0] - 2026-06-19
 
 Complete rewrite to a **fully-local** design for people running Claude Code on a
