@@ -1,9 +1,13 @@
-# 🔁 Recall — fully-local project memory for Claude Code
+<h1 align="center">🔁</h1>
+<h3 align="center">Recall — fully-local project memory for Claude Code</h3>
 
-[![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-CC785C)](https://claude.com/claude-code)
-[![CI](https://github.com/raiyanyahya/recall/actions/workflows/ci.yml/badge.svg)](https://github.com/raiyanyahya/recall/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml/badge.svg)](https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://claude.com/claude-code"><img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code-CC785C"></a>
+  <a href="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+</p>
+
 
 > Claude Code starts every session cold. Recall keeps a local log of your
 > sessions and condenses it into a resume-ready summary — **entirely on your
