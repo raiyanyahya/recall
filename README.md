@@ -21,6 +21,12 @@
   re-explaining the project each session — without a metered summarizer running up
   a bill. The summary is a local algorithm, not an LLM call, so persistent memory
   costs you nothing beyond the subscription you already pay for.
+- **Saves your usage credits.** Two ways: (1) the summary is built locally, so
+  capturing and updating your memory spends **zero** model tokens; and (2)
+  resuming from a compact `context.md` (~1–2K tokens) instead of re-explaining the
+  project from scratch each session means far fewer tokens spent per session —
+  stretching your subscription's usage limits (or, on the API, lowering billed
+  credits).
 - **Nothing leaves your machine.** Your transcripts (code, paths, sometimes
   secrets) are never sent to any API. Most "memory" tools pipe your context to a
   model endpoint; Recall makes a privacy guarantee they can't.
