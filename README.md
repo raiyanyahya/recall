@@ -1,5 +1,6 @@
-# Recall — fully-local project memory for Claude Code
+# 🔁 Recall — fully-local project memory for Claude Code
 
+[![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-CC785C)](https://claude.com/claude-code)
 [![CI](https://github.com/raiyanyahya/recall/actions/workflows/ci.yml/badge.svg)](https://github.com/raiyanyahya/recall/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml/badge.svg)](https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -174,3 +175,11 @@ recall/
 ├── LICENSE · SECURITY.md · CONTRIBUTING.md
 └── .gitignore
 ```
+
+## Contributing & issues
+
+Bugs and ideas are welcome — open an [issue](https://github.com/raiyanyahya/recall/issues/new/choose)
+(bug-report and feature templates provided) or a pull request. See
+[CONTRIBUTING.md](CONTRIBUTING.md) before submitting, and report security
+vulnerabilities privately per [SECURITY.md](SECURITY.md) rather than in a public issue.
+
