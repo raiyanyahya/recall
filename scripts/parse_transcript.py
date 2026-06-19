@@ -26,6 +26,17 @@ _TOOL_ARG = {
 _FILE_ARGS = ("file_path", "notebook_path")
 
 
+_RECALL_INTERNAL = "make_context.py"  # Recall's own save command — not user activity
+
+
+def _is_command_meta(text):
+    """True for Claude Code slash-command expansion turns (e.g. running
+    /recall:save), which are not real user prompts."""
+    return ("<command-name>" in text
+            or "<command-message>" in text
+            or "<local-command-stdout>" in text)
+
+
 def _block_text(content):
     if isinstance(content, str):
         return content
@@ -70,7 +81,8 @@ def parse_lines(lines):
 
         if etype == "user":
             text = _block_text(content).strip()
-            if text:  # skip tool_result-only turns
+            # skip tool_result-only turns and slash-command invocations
+            if text and not _is_command_meta(text):
                 events.append({"role": "user", "text": text,
                                "tool": "", "detail": "", "files": []})
         elif etype == "assistant":
@@ -81,7 +93,11 @@ def parse_lines(lines):
             if isinstance(content, list):
                 for block in content:
                     if isinstance(block, dict) and block.get("type") == "tool_use":
-                        events.append(_tool_event(block))
+                        ev = _tool_event(block)
+                        # don't record Recall's own save command as user activity
+                        if ev["tool"] == "Bash" and _RECALL_INTERNAL in ev["detail"]:
+                            continue
+                        events.append(ev)
     return events
 
 
