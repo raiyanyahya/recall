@@ -6,11 +6,23 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-20
+
 ### Added
+- **Opt-in auto-save**: `auto_save_context: "on_end"` regenerates `context.md`
+  automatically when a session ends (via the SessionEnd hook), so memory stays
+  current without running `/recall:save`. Default `"off"`.
+- **"Next steps / open threads" section** in `context.md` — a local heuristic
+  surfaces unfinished work (next-step cues, open questions, uncommitted files).
 - Issue templates (bug report, feature request) and a pull request template.
 - This changelog.
 
 ### Changed
+- `/recall:save` now derives its deterministic facts (goal, files, commands) from
+  the most recent *substantive* session, so saving from a fresh/empty session
+  falls back to your last real work instead of producing an empty summary.
+- Slash-command invocations (e.g. running `/recall:save`) are filtered out of the
+  transcript so they never appear as the Goal or as recorded activity.
 - Bumped GitHub Actions: `actions/checkout` v4→v7, `actions/setup-python`
   v5→v6, `gitleaks/gitleaks-action` v2→v3, `github/codeql-action` v3→v4.
 
@@ -58,6 +70,7 @@ done by a vendored classical summarizer.
   transcript summarizer with selectable backends (Ollama by default, Claude API
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
-[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/raiyanyahya/recall/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/raiyanyahya/recall/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/raiyanyahya/recall/releases/tag/v0.1.0

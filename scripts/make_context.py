@@ -10,6 +10,7 @@ honest, reproducible digest of the session. No LLM, no network.
 import argparse
 import datetime
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -20,14 +21,24 @@ from common import (  # noqa: E402
     context_path,
     ensure_output_dir,
     git_info,
+    git_uncommitted,
     history_path,
     locate_transcript,
     project_name,
+    project_transcripts,
     read_text,
     write_text,
 )
 from config import load_config  # noqa: E402
 from redact import redact  # noqa: E402
+
+# Sentences that signal unfinished work / next actions.
+_NEXT_CUE = re.compile(
+    r"\b(next step|next|to[- ]?do|todo|fixme|still need|still needs|need to|"
+    r"needs to|should|blocked|remaining|left to|follow[- ]?up|not yet|"
+    r"haven'?t|pending|in progress|wip)\b",
+    re.IGNORECASE,
+)
 
 
 def _clean_for_summary(history_text):
@@ -59,8 +70,45 @@ def _bullets(items, limit, empty="(none)"):
     return out
 
 
+def _next_steps(corpus, cwd, cfg, limit=5):
+    """Heuristically surface what's left to do: sentences with next-step cues or
+    open questions, plus any uncommitted files. Local-only, no LLM."""
+    steps, seen = [], set()
+    for s in summarizer.split_sentences(corpus):
+        if _NEXT_CUE.search(s) or s.rstrip().endswith("?"):
+            key = s.lower()
+            if key not in seen:
+                seen.add(key)
+                steps.append(s)
+        if len(steps) >= limit:
+            break
+    if cfg.get("include_git"):
+        uncommitted = git_uncommitted(cwd)
+        if uncommitted:
+            steps.append("Uncommitted changes to wrap up: "
+                         + ", ".join(uncommitted[:8]))
+    return steps
+
+
+def _facts_events(cwd, transcript_path, located_events):
+    """Events to derive deterministic facts from. If the located session has no
+    real prompt (e.g. a standalone /recall:save), fall back to the most recent
+    session that does — so save is useful whenever it's run, not only at the end
+    of a work session."""
+    if parse_transcript.first_user_goal(located_events):
+        return located_events
+    for tp in project_transcripts(cwd):
+        if os.path.abspath(tp) == os.path.abspath(transcript_path):
+            continue
+        alt = parse_transcript.parse(tp)
+        if parse_transcript.first_user_goal(alt):
+            return alt
+    return located_events
+
+
 def build(cwd, cfg, transcript_path):
-    events = parse_transcript.parse(transcript_path)
+    located = parse_transcript.parse(transcript_path)
+    events = _facts_events(cwd, transcript_path, located)
 
     # Summarize the captured history if present (it's what the user expects to be
     # condensed); otherwise summarize the transcript prose directly.
@@ -74,11 +122,13 @@ def build(cwd, cfg, transcript_path):
     last = parse_transcript.last_assistant_state(events)
     files = parse_transcript.touched_files(events)
     cmds = parse_transcript.commands(events)
+    nxt = _next_steps(corpus, cwd, cfg)
     git = git_info(cwd) if cfg["include_git"] else ""
 
     ts = datetime.datetime.now().isoformat(timespec="seconds")
     summary_md = ("\n".join(f"- {s}" for s in summary) if summary
                   else "_(not enough captured to summarize)_")
+    next_md = ("\n".join(f"- {s}" for s in nxt) if nxt else "_(none detected)_")
 
     md = f"""# Project Context — {project_name(cwd)} (updated {ts})
 
@@ -89,6 +139,9 @@ _Generated locally by Recall — {summarizer.backend_name()}._
 
 ## 🧭 Summary
 {summary_md}
+
+## ⏭️ Next steps / open threads
+{next_md}
 
 ## 📂 Files touched
 {_bullets(files, 30)}

@@ -22,10 +22,10 @@ def assistant(text, tools=None):
     return {"type": "assistant", "message": {"role": "assistant", "content": content}}
 
 
-def run_capture(cwd, transcript_path, session_id):
-    """Invoke capture.main() with a simulated hook stdin payload."""
-    import capture
+def _run_hook(module_name, cwd, transcript_path, session_id):
+    import importlib
 
+    mod = importlib.import_module(module_name)
     saved = sys.stdin
     sys.stdin = io.StringIO(json.dumps({
         "cwd": cwd,
@@ -33,6 +33,16 @@ def run_capture(cwd, transcript_path, session_id):
         "session_id": session_id,
     }))
     try:
-        capture.main()
+        mod.main()
     finally:
         sys.stdin = saved
+
+
+def run_capture(cwd, transcript_path, session_id):
+    """Invoke capture.main() with a simulated hook stdin payload."""
+    _run_hook("capture", cwd, transcript_path, session_id)
+
+
+def run_session_end(cwd, transcript_path, session_id):
+    """Invoke session_end.main() with a simulated hook stdin payload."""
+    _run_hook("session_end", cwd, transcript_path, session_id)

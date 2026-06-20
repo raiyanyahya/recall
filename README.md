@@ -37,8 +37,9 @@ Two files, written into your project under `.recall/`:
 
 - **`history.md`** — *the log.* Append-only. Every session is captured here as it
   happens (your prompts, Claude's replies, the files touched and commands run).
-- **`context.md`** — *the summary.* Overwritten on demand by the local summarizer
-  — the condensed "where are we right now" you load into the next session.
+- **`context.md`** — *the summary.* Overwritten by the local summarizer — the
+  condensed "where are we right now" you load into the next session: goal,
+  summary, **next steps / open threads**, files touched, and where you left off.
 
 ## How it works
 
@@ -47,6 +48,7 @@ Two files, written into your project under `.recall/`:
 | **During the session** | The `Stop` / `SessionEnd` hooks append new activity to `.recall/history.md`. Capture is incremental (only new turns) and fully local. |
 | **At session start** | The `SessionStart` hook surfaces `context.md` and has Claude ask you two things: resume from the saved context? and keep logging this session? |
 | **Before you wrap up** | You run `/recall:save`. The **local summarizer** reads `history.md` and (over)writes `context.md`. |
+| **…or automatically** | Set `auto_save_context: "on_end"` and `context.md` regenerates every time a session ends — no `/recall:save` needed. |
 
 There is no LLM call anywhere — the summary is produced by **TF-IDF + TextRank**
 (extractive summarization) running locally.
@@ -84,6 +86,7 @@ Drop this in your project root to override defaults:
 |---|---|---|
 | `output_dir` | `".recall"` | Where `history.md` / `context.md` live. |
 | `capture_history` | `true` | Append session activity to `history.md`. |
+| `auto_save_context` | `"off"` | Regenerate `context.md` when a session ends: `"off"` or `"on_end"`. |
 | `summary_sentences` | `8` | How many sentences the summary keeps. |
 | `redact` | `true` | Strip obvious secrets before writing the md files. |
 | `include_git` | `true` | Add `git diff --stat` + recent commits to `context.md`. |

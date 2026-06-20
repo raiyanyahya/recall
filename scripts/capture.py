@@ -17,7 +17,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
-def main():
+def capture_session(data):
+    """Append any new transcript activity to history.md. Takes the parsed hook
+    payload so other hooks (e.g. SessionEnd) can reuse it."""
     import parse_transcript
     from common import (
         append_text,
@@ -27,13 +29,11 @@ def main():
         locate_transcript,
         pause_path,
         project_name,
-        read_hook_input,
         save_state,
     )
     from config import load_config
     from redact import redact
 
-    data = read_hook_input()
     cwd = data.get("cwd") or os.getcwd()
     cfg = load_config(cwd)
 
@@ -93,6 +93,11 @@ def main():
 
     state[session_id] = new_offset
     save_state(cwd, cfg, state)
+
+
+def main():
+    from common import read_hook_input
+    capture_session(read_hook_input())
 
 
 if __name__ == "__main__":

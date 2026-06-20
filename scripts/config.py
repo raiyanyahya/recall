@@ -13,6 +13,9 @@ DEFAULTS = {
     "output_dir": ".recall",
     # Append every session to history.md automatically (Stop / SessionEnd hooks).
     "capture_history": True,
+    # Regenerate context.md automatically when a session ends, so memory stays
+    # current without running /recall:save: "off" (default) | "on_end".
+    "auto_save_context": "off",
     # How many sentences the extractive summarizer keeps for the Summary section.
     "summary_sentences": 8,
     # Strip obvious secrets before writing to the (committable) md files.

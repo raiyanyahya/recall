@@ -110,39 +110,76 @@ def project_name(cwd):
     return os.path.basename(os.path.normpath(cwd)) or cwd
 
 
+# Recall runs git inside the user's project, which may be an untrusted clone. A
+# repo's own config can hijack plain git commands to run arbitrary code
+# (core.fsmonitor, diff.external, hooks, a pager). Neutralize those vectors on
+# every invocation; we only ever read, never prompt or fetch.
+_GIT_HARDENING = [
+    "-c", "core.fsmonitor=",
+    "-c", "diff.external=",
+    "-c", "core.hooksPath=/dev/null",
+    "-c", "core.pager=cat",
+]
+_GIT_ENV = {"GIT_TERMINAL_PROMPT": "0", "GIT_PAGER": "cat", "PAGER": "cat"}
+
+
+def _git(cwd, args):
+    try:
+        out = subprocess.run(
+            ["git", "-C", cwd, "--no-pager", *_GIT_HARDENING, *args],
+            capture_output=True, text=True, timeout=10,
+            env={**os.environ, **_GIT_ENV},
+        )
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def _is_git_repo(cwd):
+    return _git(cwd, ["rev-parse", "--is-inside-work-tree"]) == "true"
+
+
 def git_info(cwd):
-    # Recall runs git inside the user's project, which may be an untrusted
-    # clone. A repo's own config can hijack plain git commands to run arbitrary
-    # code (core.fsmonitor, diff.external, hooks, a pager). Neutralize those
-    # vectors on every invocation; we only ever read, never prompt or fetch.
-    hardening = [
-        "-c", "core.fsmonitor=",
-        "-c", "diff.external=",
-        "-c", "core.hooksPath=/dev/null",
-        "-c", "core.pager=cat",
-    ]
-    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_PAGER": "cat", "PAGER": "cat"}
-
-    def run(args):
-        try:
-            out = subprocess.run(
-                ["git", "-C", cwd, "--no-pager", *hardening, *args],
-                capture_output=True, text=True, timeout=10, env=env,
-            )
-            return out.stdout.strip() if out.returncode == 0 else ""
-        except (OSError, subprocess.SubprocessError):
-            return ""
-
-    if run(["rev-parse", "--is-inside-work-tree"]) != "true":
+    if not _is_git_repo(cwd):
         return ""
     parts = []
-    stat = run(["diff", "--no-ext-diff", "--stat"])
+    stat = _git(cwd, ["diff", "--no-ext-diff", "--stat"])
     if stat:
         parts.append("Uncommitted changes (git diff --stat):\n" + stat)
-    log = run(["log", "--oneline", "-8"])
+    log = _git(cwd, ["log", "--oneline", "-8"])
     if log:
         parts.append("Recent commits:\n" + log)
     return "\n\n".join(parts)
+
+
+def git_uncommitted(cwd):
+    """List of paths with uncommitted changes (porcelain), or []."""
+    if not _is_git_repo(cwd):
+        return []
+    out, seen = [], set()
+    for line in _git(cwd, ["status", "--porcelain"]).splitlines():
+        path = line[3:].strip()  # "XY <path>"
+        if path and path not in seen:
+            seen.add(path)
+            out.append(path)
+    return out
+
+
+def project_transcripts(cwd):
+    """All transcript paths for THIS project, newest first. Empty if none."""
+    projects = Path.home() / ".claude" / "projects"
+    if not projects.is_dir():
+        return []
+    for name in _candidates(cwd):
+        cand = projects / name
+        if cand.is_dir():
+            try:
+                files = sorted(cand.glob("*.jsonl"),
+                               key=lambda f: f.stat().st_mtime, reverse=True)
+            except OSError:
+                return []
+            return [str(f) for f in files]
+    return []
 
 
 def _candidates(cwd):
