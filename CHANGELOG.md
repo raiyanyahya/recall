@@ -30,7 +30,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Granted the secret-scan job `pull-requests: read` so gitleaks can list PR
   commits on `pull_request` events (was failing with HTTP 403).
 
-## [0.2.0] - 2026-06-19
+## 0.2.0 - 2026-06-19
 
 Complete rewrite to a **fully-local** design for people running Claude Code on a
 subscription: the only AI in the loop is Claude Code itself, and summarization is
@@ -62,7 +62,7 @@ done by a vendored classical summarizer.
 - `.claude-plugin/marketplace.json` (the repo is its own installable marketplace).
 - `LICENSE` (MIT), `SECURITY.md`, `CONTRIBUTING.md`, `pyproject.toml`.
 
-## [0.1.0] - 2026-06-19
+## 0.1.0 - 2026-06-19
 
 ### Added
 - Initial plugin: `SessionStart` / `SessionEnd` / `Stop` hooks, the
@@ -71,6 +71,4 @@ done by a vendored classical summarizer.
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
 [Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/raiyanyahya/recall/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/raiyanyahya/recall/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/raiyanyahya/recall/releases/tag/v0.1.0
+[0.3.0]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.0
