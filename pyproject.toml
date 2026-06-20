@@ -13,6 +13,16 @@ select = ["E", "F", "W", "I", "B"]
 testpaths = ["tests"]
 addopts = "-q"
 
+[tool.coverage.run]
+source = ["scripts"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+# session_start is a thin lifecycle entry point exercised only inside a live
+# Claude Code session, so it can't be meaningfully unit-tested here.
+omit = ["scripts/session_start.py"]
+
 [tool.bandit]
 # Reviewed and accepted, with justification:
 #  B404/B603/B607 — git is the only subprocess. It's invoked with a static argv

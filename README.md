@@ -5,6 +5,7 @@
   <a href="https://claude.com/claude-code"><img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code-CC785C"></a>
   <a href="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml/badge.svg"></a>
+  <a href="https://codecov.io/gh/raiyanyahya/recall"><img alt="Coverage" src="https://codecov.io/gh/raiyanyahya/recall/branch/master/graph/badge.svg"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
 </p>
 
