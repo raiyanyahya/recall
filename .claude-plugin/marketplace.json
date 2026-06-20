@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Fully-local project memory for Claude Code — session logging plus a vendored TextRank summary, with no API key or external model.",
-    "version": "0.3.0"
+    "version": "0.3.1"
   },
   "plugins": [
     {

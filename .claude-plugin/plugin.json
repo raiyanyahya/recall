@@ -1,7 +1,7 @@
 {
   "name": "recall",
   "description": "Durable, fully-local project memory for Claude Code. Logs every session to .recall/history.md and condenses it into .recall/context.md with a local Python summarizer (TF-IDF + TextRank) — no API key, no external model, nothing leaves your machine. New sessions resume from the saved context.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": {
     "name": "Raiyan Yahya"
   },

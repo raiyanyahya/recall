@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-20
+
+### Added
+- **Code coverage**: tests now run under `pytest-cov` (branch coverage, config in
+  `pyproject.toml`), CI uploads the report to Codecov from a single matrix cell,
+  and the README carries a coverage badge.
+
+### Changed
+- Pointed the CI/CodeQL workflow triggers and the README badges at the `master`
+  default branch (were `main`), so pushes to the default branch run and report.
+
 ## [0.3.0] - 2026-06-20
 
 ### Added
@@ -70,5 +81,6 @@ done by a vendored classical summarizer.
   transcript summarizer with selectable backends (Ollama by default, Claude API
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
-[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.1
 [0.3.0]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.0
