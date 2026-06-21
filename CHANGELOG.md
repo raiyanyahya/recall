@@ -21,6 +21,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   cores and breaks ties by position, so both always select the same sentences — a
   committed `context.md` no longer depends on whether numpy is installed. (Caught
   by the new harness.)
+- **Cleaner "Next steps / open threads".** The heuristic no longer surfaces
+  echoed prompt/instruction text (e.g. "in 3-4 sentences, list the next steps"),
+  trivial questions ("looks good, anything left?"), markdown header/label lines,
+  or Recall's own injected boilerplate. The over-broad bare `next` cue was
+  dropped (genuine steps still match `still need` / `should` / `todo` / …), and a
+  bare question must now be substantive to count. (Surfaced by a live end-to-end
+  test of the plugin in real Claude Code.)
 
 ## [0.3.3] - 2026-06-22
 

@@ -68,6 +68,27 @@ def test_next_steps_section_extracts_cues(tmp_path):
     assert "token refresh" in nxt or "OAuth" in nxt
 
 
+def test_next_steps_filters_meta_and_trivial_questions(tmp_path):
+    cwd = str(tmp_path)
+    t = os.path.join(cwd, "sessHHHH8888.jsonl")
+    make_jsonl(t, [
+        user("In 3-4 sentences confirm the plan and list the next steps you'd take."),
+        assistant("Concrete next steps:\n"
+                  "Plan confirmed. Looks good, anything left? "
+                  "Note this is from saved Recall context and not yet verified. "
+                  "Next I still need to add the Redis backend so limits are shared."),
+    ])
+    assert make_context.run(cwd, transcript_path=t, quiet=True) == 0
+    ctx = common.read_text(common.context_path(cwd, load_config(cwd)))
+    nxt = ctx.split("## ⏭️ Next steps / open threads")[1].split("## 📂")[0]
+
+    assert "Redis backend" in nxt                       # the genuine step is kept
+    assert "confirm the plan" not in nxt.lower()        # echoed prompt/instruction dropped
+    assert "anything left" not in nxt.lower()           # trivial question dropped
+    assert "concrete next steps" not in nxt.lower()     # header/label line dropped
+    assert "recall context" not in nxt.lower()          # Recall's own boilerplate dropped
+
+
 def test_standalone_save_falls_back_to_substantive_session(tmp_path, monkeypatch):
     cwd = str(tmp_path)
     # The "current" transcript is just a /recall:save invocation — no real prompt.

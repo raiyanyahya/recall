@@ -32,13 +32,31 @@ from common import (  # noqa: E402
 from config import load_config  # noqa: E402
 from redact import redact  # noqa: E402
 
-# Sentences that signal unfinished work / next actions.
+# Sentences that signal unfinished work / next actions. (Bare "next" is left out
+# on purpose — it's too broad, matching "next week" and echoed prompts like "the
+# next steps you'd take"; real steps still hit "still need" / "should" / etc.)
 _NEXT_CUE = re.compile(
-    r"\b(next step|next|to[- ]?do|todo|fixme|still need|still needs|need to|"
+    r"\b(next steps?|to[- ]?do|todo|fixme|still need|still needs|need to|"
     r"needs to|should|blocked|remaining|left to|follow[- ]?up|not yet|"
     r"haven'?t|pending|in progress|wip)\b",
     re.IGNORECASE,
 )
+
+# Sentences that are instructions to the model or meta-asks about the answer
+# itself — not real pending work. They otherwise sneak in via a cue word or a
+# trailing "?" (e.g. an echoed prompt: "in 3-4 sentences, list the steps").
+# "recall context" guards against the model echoing Recall's own injected
+# SessionStart boilerplate back into a later session's capture.
+_NOT_A_STEP = re.compile(
+    r"(?i)\b(in \d+[-\s]?\d*\s*sentences?|in a few sentences|keep it (short|brief)|"
+    r"you'?d take|confirm the plan|tell me|without asking|reply with|recall context)\b"
+)
+
+# A label/header line ("Concrete next steps:", optionally **bold**) is not itself
+# a step.
+_HEADER_LINE = re.compile(r":\*{0,2}\s*$")
+
+_MIN_QUESTION_LEN = 30  # a bare question must be substantive to count as a thread
 
 
 def _clean_for_summary(history_text):
@@ -71,11 +89,17 @@ def _bullets(items, limit, empty="(none)"):
 
 
 def _next_steps(corpus, cwd, cfg, limit=5):
-    """Heuristically surface what's left to do: sentences with next-step cues or
-    open questions, plus any uncommitted files. Local-only, no LLM."""
+    """Heuristically surface what's left to do: sentences with an explicit
+    next-step cue, or a substantive open question, plus any uncommitted files.
+    Instruction/meta sentences and trivial questions are filtered out. Local-only.
+    """
     steps, seen = [], set()
     for s in summarizer.split_sentences(corpus):
-        if _NEXT_CUE.search(s) or s.rstrip().endswith("?"):
+        s = s.strip()
+        if _NOT_A_STEP.search(s) or _HEADER_LINE.search(s):
+            continue
+        question = s.endswith("?") and len(s) >= _MIN_QUESTION_LEN
+        if _NEXT_CUE.search(s) or question:
             key = s.lower()
             if key not in seen:
                 seen.add(key)
