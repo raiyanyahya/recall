@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-06-22
+
 ### Added
 - **Benchmark + quality harness** (`benchmarks/bench.py`, stdlib-only). Reports
   summarizer latency, the numpy vs pure-Python speedup, transcript-parse
@@ -138,7 +140,8 @@ done by a vendored classical summarizer.
   transcript summarizer with selectable backends (Ollama by default, Claude API
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
-[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.4
 [0.3.3]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.3
 [0.3.2]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.2
 [0.3.1]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.1
