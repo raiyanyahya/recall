@@ -59,7 +59,10 @@ def capture_session(data):
         return
 
     state = load_state(cwd, cfg)
-    start = int(state.get(session_id, 0) or 0)
+    try:
+        start = int(state.get(session_id, 0) or 0)
+    except (TypeError, ValueError):
+        start = 0  # corrupted/tampered .capture.json entry; re-capture this session
     if start > size:
         start = 0  # transcript rotated/shrank; re-capture from the top
 
@@ -94,6 +97,9 @@ def capture_session(data):
             body = redact(body)
         append_text(hist, prefix + body + "\n")
 
+    # Re-insert at the end so this active session is the most-recent entry and
+    # save_state's session cap never prunes it.
+    state.pop(session_id, None)
     state[session_id] = new_offset
     save_state(cwd, cfg, state)
 

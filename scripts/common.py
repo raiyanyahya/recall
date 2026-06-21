@@ -114,10 +114,19 @@ def load_state(cwd, cfg):
         return {}
 
 
+# Per-session capture offsets accumulate one entry per session id forever, so
+# cap the file to bound a long-lived project's .capture.json. The caller updates
+# the current session last (dict preserves insertion order), so trimming the
+# oldest entries never drops the session being actively tracked.
+_MAX_TRACKED_SESSIONS = 500
+
+
 def save_state(cwd, cfg, state):
     try:
         if not ensure_output_dir(cwd, cfg):
             return
+        if len(state) > _MAX_TRACKED_SESSIONS:
+            state = dict(list(state.items())[-_MAX_TRACKED_SESSIONS:])
         write_text(state_path(cwd, cfg), json.dumps(state))
     except OSError:
         pass
@@ -175,7 +184,9 @@ def git_uncommitted(cwd):
         return []
     out, seen = [], set()
     for line in _git(cwd, ["status", "--porcelain"]).splitlines():
-        path = line[3:].strip()  # "XY <path>"
+        path = line[3:].strip()  # "XY <path>" (rename/copy shows "old -> new")
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1].strip()
         if path and path not in seen:
             seen.add(path)
             out.append(path)

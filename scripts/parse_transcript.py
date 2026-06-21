@@ -49,7 +49,9 @@ def _block_text(content):
 
 def _tool_event(block):
     name = block.get("name", "tool")
-    inp = block.get("input") or {}
+    inp = block.get("input")
+    if not isinstance(inp, dict):
+        inp = {}  # tolerate a malformed tool_use whose input isn't an object
     arg = _TOOL_ARG.get(name)
     detail = ""
     if arg and isinstance(inp.get(arg), str):
@@ -76,8 +78,11 @@ def parse_lines(lines):
             obj = json.loads(line)
         except ValueError:
             continue
+        if not isinstance(obj, dict):
+            continue  # a valid-JSON but non-object line is not a transcript event
         etype = obj.get("type")
-        content = (obj.get("message") or {}).get("content")
+        message = obj.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
 
         if etype == "user":
             text = _block_text(content).strip()

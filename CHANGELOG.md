@@ -6,6 +6,30 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-06-22
+
+### Fixed
+- **Malformed transcript lines no longer break capture.** A single non-object
+  JSONL line (or a turn whose `message`/tool `input` wasn't an object) raised an
+  `AttributeError` in the parser; in the capture hook that error was swallowed
+  *and the byte offset never advanced*, so history logging silently died for the
+  rest of the session (and `/recall:save` exited non-zero). Such lines are now
+  skipped gracefully.
+- **Corrupt `.capture.json` offset** no longer crashes capture — a non-integer
+  entry falls back to re-capturing the session from the top.
+- `git_uncommitted` now reports the destination path for renames instead of the
+  raw `old -> new` porcelain string.
+
+### Changed
+- **Config values are type-validated.** A project-shipped `recall.config.json` is
+  untrusted, so a wrong-typed value (e.g. `output_dir` as a number,
+  `summary_sentences` as a string, a non-positive char cap) now falls back to the
+  default instead of risking a `TypeError`. A bad `redact` value fails safe to
+  `true`.
+- **`.capture.json` is bounded.** Per-session offsets are capped (most-recent 500
+  sessions retained) so the state file can't grow without bound; the active
+  session is always preserved.
+
 ## [0.3.2] - 2026-06-21
 
 ### Security
@@ -91,7 +115,8 @@ done by a vendored classical summarizer.
   transcript summarizer with selectable backends (Ollama by default, Claude API
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
-[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.3
 [0.3.2]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.2
 [0.3.1]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.1
 [0.3.0]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.0

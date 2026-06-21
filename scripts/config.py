@@ -29,13 +29,33 @@ DEFAULTS = {
 CONFIG_FILENAME = "recall.config.json"
 
 
-def load_config(cwd):
+def _coerce(user):
+    """Overlay only known keys whose value matches the default's type onto the
+    defaults. A committed recall.config.json is untrusted input, so a wrong-typed
+    value (output_dir as a number, summary_sentences as a string, a negative
+    char cap, …) must fall back to the default rather than crash a hook or the
+    summarizer."""
     cfg = dict(DEFAULTS)
+    for key, default in DEFAULTS.items():
+        if key not in user:
+            continue
+        value = user[key]
+        if isinstance(default, bool):        # bool first: bool is a subclass of int
+            if isinstance(value, bool):
+                cfg[key] = value
+        elif isinstance(default, int):
+            if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+                cfg[key] = value
+        elif isinstance(default, str):
+            if isinstance(value, str) and value:
+                cfg[key] = value
+    return cfg
+
+
+def load_config(cwd):
     try:
         with open(os.path.join(cwd, CONFIG_FILENAME), "r", encoding="utf-8") as fh:
             user = json.load(fh)
-        if isinstance(user, dict):
-            cfg.update({k: v for k, v in user.items() if k in DEFAULTS})
     except (OSError, ValueError):
-        pass  # missing/malformed -> defaults; never fail a hook over config
-    return cfg
+        return dict(DEFAULTS)  # missing/malformed -> defaults; never fail over config
+    return _coerce(user) if isinstance(user, dict) else dict(DEFAULTS)

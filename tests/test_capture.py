@@ -1,3 +1,4 @@
+import json
 import os
 
 import common
@@ -54,3 +55,31 @@ def test_partial_trailing_line_deferred_until_complete(tmp_path):
         fh.write("}}\n")
     run_capture(cwd, t, "sessBBBB2222")
     assert _history(cwd).count("still writing") == 1
+
+
+def test_capture_survives_malformed_transcript_line(tmp_path):
+    # A corrupt JSONL line must not stall capture: the good turns around it still
+    # get logged (a regression would silently break capture for the session).
+    cwd = str(tmp_path)
+    t = os.path.join(cwd, "sessFFFF6666.jsonl")
+    with open(t, "w", encoding="utf-8") as fh:
+        fh.write("12345\n")                                    # bare number, not an event
+        fh.write(json.dumps(user("real work here")) + "\n")
+        fh.write(json.dumps(assistant("did the work")) + "\n")
+    run_capture(cwd, t, "sessFFFF6666")
+    h = _history(cwd)
+    assert "real work here" in h and "did the work" in h
+
+
+def test_corrupt_offset_state_does_not_crash_capture(tmp_path):
+    # A tampered .capture.json (non-int offset) must not crash capture; it just
+    # re-captures the session from the top.
+    cwd = str(tmp_path)
+    cfg = load_config(cwd)
+    common.ensure_output_dir(cwd, cfg)
+    common.write_text(common.state_path(cwd, cfg), json.dumps({"sessGGGG7777": "bad"}))
+
+    t = os.path.join(cwd, "sessGGGG7777.jsonl")
+    make_jsonl(t, [user("recover cleanly"), assistant("ok")])
+    run_capture(cwd, t, "sessGGGG7777")
+    assert "recover cleanly" in _history(cwd)
