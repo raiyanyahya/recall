@@ -42,6 +42,36 @@ Two files, written into your project under `.recall/`:
   condensed "where are we right now" you load into the next session: goal,
   summary, **next steps / open threads**, files touched, and where you left off.
 
+## "Doesn't Claude Code already have memory?"
+
+It does — and Recall is complementary, not a replacement. The built-in options
+solve different problems:
+
+- **`CLAUDE.md` (and the `#` shortcut)** is *hand-written* memory: rules and notes
+  **you** curate, loaded as **instructions Claude follows**. Great for "how I want
+  you to work," but it's manual upkeep and it doesn't record what actually
+  happened in a session.
+- **`--continue` / `--resume`** replays a *prior conversation* — full fidelity, but
+  it reloads the whole transcript (token-heavy) and is tied to your local session
+  history on one machine, not a portable, readable digest.
+- **Context compaction** condenses a conversation *within* a session; it isn't a
+  durable record you reopen days later.
+
+Recall fills the gap between these: an **automatic, deterministic record of what
+each session did**, condensed into a compact resume point.
+
+| | `CLAUDE.md` / `#` | `--continue` / `--resume` | **Recall** |
+|---|---|---|---|
+| What it is | Hand-written notes & rules | Reloads a prior conversation | Auto-captured session log + local summary |
+| Upkeep | Manual | None (you pick the session) | None — written as you work |
+| Holds | Instructions to follow | The full prior transcript | Goal, files, commands, where you left off, next steps |
+| Cost to resume | Small | Large (replays full transcript) | ~1–2K tokens (compact digest) |
+| Form | Markdown you edit | Local session state | Plaintext in `.recall/` — diffable & shareable |
+| How Claude treats it | As instructions | As the conversation | Fenced as **untrusted reference data** |
+
+In short: `CLAUDE.md` is *how I want you to work*; Recall is *here's what we did
+last time and where we stopped* — produced offline, with no model tokens spent.
+
 ## How it works
 
 | Moment | What happens |
