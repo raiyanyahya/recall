@@ -69,9 +69,18 @@ def summarize(text, k=8):
     except Exception:
         scores = _textrank_python(tokens, idf)
 
-    n = len(sentences)
-    top = sorted(range(n), key=lambda i: scores[i], reverse=True)[:k]
-    return [sentences[i] for i in sorted(top)]
+    return _select(sentences, scores, k)
+
+
+def _select(sentences, scores, k):
+    """Top-k sentences by score, returned in original order. Scores are rounded
+    before ranking and ties are broken by position, so the sub-epsilon numerical
+    difference between the numpy and pure-Python cores can never change which
+    sentences are chosen — both backends always produce the same summary (a
+    committed context.md must not depend on whether numpy happens to be present)."""
+    order = sorted(range(len(sentences)),
+                   key=lambda i: (round(scores[i], 10), -i), reverse=True)
+    return [sentences[i] for i in sorted(order[:k])]
 
 
 def backend_name():

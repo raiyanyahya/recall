@@ -6,6 +6,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Benchmark + quality harness** (`benchmarks/bench.py`, stdlib-only). Reports
+  summarizer latency, the numpy vs pure-Python speedup, transcript-parse
+  throughput, and compression; and scores the summarizer's salient-sentence
+  selection against lead/tail/random baselines on a labeled fixture set. A
+  `--check` mode gates the quality invariants (summarizer beats the baselines and
+  both backends select identical sentences) and runs in CI on both the numpy and
+  pure-Python paths.
+
+### Fixed
+- **Deterministic summaries across backends.** Summary sentence ranking now
+  rounds away the sub-epsilon score differences between the numpy and pure-Python
+  cores and breaks ties by position, so both always select the same sentences — a
+  committed `context.md` no longer depends on whether numpy is installed. (Caught
+  by the new harness.)
+
 ## [0.3.3] - 2026-06-22
 
 ### Fixed

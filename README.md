@@ -187,15 +187,25 @@ a fresh session — Recall greets you with where you left off.
 python -m venv .venv && . .venv/bin/activate
 pip install pytest ruff bandit numpy   # numpy optional
 
-ruff check scripts tests               # lint
+ruff check scripts tests benchmarks    # lint
 bandit -c pyproject.toml -r scripts    # security static analysis
 pytest                                 # run the suite (also test without numpy)
+python benchmarks/bench.py             # perf + quality numbers (human-readable)
+python benchmarks/bench.py --check     # assert quality invariants (the CI gate)
 claude plugin validate .               # official manifest validation
 ```
 
+`benchmarks/bench.py` is a stdlib-only harness: alongside latency/throughput it
+scores the summarizer's salient-sentence selection against lead/tail/random
+baselines on a labeled fixture set and checks the numpy and pure-Python cores
+select the **same** sentences. `--check` gates those quality invariants (it never
+gates wall-clock timings). Redaction quality is covered by the unit suite
+(`tests/test_redact.py`), so no secret-shaped fixtures live in the benchmark.
+
 CI (`.github/workflows/`) runs lint + Bandit, the test suite across Python
-3.9–3.13 **with and without numpy** (both summarizer paths), CodeQL, secret
-scanning, and manifest JSON validation on every push and PR. See
+3.9–3.13 **with and without numpy** (both summarizer paths), the benchmark
+quality gate (both paths), CodeQL, secret scanning, and manifest JSON validation
+on every push and PR. See
 [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ## Layout
@@ -213,6 +223,7 @@ recall/
 │   ├── parse_transcript.py      # transcript → events + renderers
 │   └── config.py · common.py · redact.py
 ├── tests/                       # pytest suite (summarizer, capture, security, …)
+├── benchmarks/bench.py          # perf + quality harness (CI quality gate)
 ├── .github/                     # CI, CodeQL, secret scan, dependabot
 ├── recall.config.json        # config template / defaults
 ├── pyproject.toml               # ruff / pytest / bandit config (no runtime deps)

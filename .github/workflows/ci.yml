@@ -31,7 +31,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install --upgrade ruff bandit
       - name: Ruff
-        run: ruff check scripts tests
+        run: ruff check scripts tests benchmarks
       - name: Bandit (Python SAST)
         run: bandit -c pyproject.toml -r scripts
 
@@ -64,6 +64,26 @@ jobs:
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  benchmark:
+    name: Benchmark gate (${{ matrix.numpy }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        numpy: ["with-numpy", "no-numpy"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install numpy (accelerated summarizer path)
+        if: matrix.numpy == 'with-numpy'
+        run: python -m pip install numpy
+      - name: Benchmark report (informational)
+        run: python benchmarks/bench.py
+      - name: Quality gate (summarizer beats baselines, backends agree, redaction precision)
+        run: python benchmarks/bench.py --check
 
   secret-scan:
     name: Secret scan

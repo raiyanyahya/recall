@@ -41,3 +41,8 @@ def test_numpy_and_pure_python_cores_agree():
     a = np.array(summarizer._textrank_numpy(toks, idf))
     b = np.array(summarizer._textrank_python(toks, idf))
     assert np.allclose(a, b, atol=1e-6)
+    # Scores being close isn't enough — the *selection* must be identical, so a
+    # committed context.md never depends on whether numpy is installed. Ranking
+    # rounds away the float noise and breaks ties by position to guarantee it.
+    assert (summarizer._select(sentences, a.tolist(), 3)
+            == summarizer._select(sentences, b.tolist(), 3))
