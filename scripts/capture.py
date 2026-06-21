@@ -39,7 +39,10 @@ def capture_session(data):
 
     if not cfg.get("capture_history", True):
         return
-    if os.path.exists(pause_path(cwd, cfg)):
+    pp = pause_path(cwd, cfg)
+    if pp is None:
+        return  # output dir escapes the project; refuse to write anywhere
+    if os.path.exists(pp):
         return  # user paused logging for this project
 
     transcript_path = data.get("transcript_path") or locate_transcript(cwd)

@@ -25,7 +25,8 @@ def main():
     cfg = load_config(cwd)
 
     context_md = read_text(context_path(cwd, cfg))
-    paused = os.path.exists(pause_path(cwd, cfg))
+    pp = pause_path(cwd, cfg)
+    paused = bool(pp) and os.path.exists(pp)
     out_dir = cfg.get("output_dir", ".recall")
 
     lines = ["📒 **Recall** is active for this project."]

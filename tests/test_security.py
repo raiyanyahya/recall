@@ -17,6 +17,43 @@ def test_output_dir_confined_to_project(tmp_path):
     assert common.output_dir(cwd, {"output_dir": "memory/x"}).startswith(base + os.sep)
 
 
+def test_output_dir_rejects_symlinked_default(tmp_path):
+    # A malicious clone can ship `.recall` itself as a symlink pointing outside
+    # the project. The default fallback must not follow it outside cwd; with no
+    # safe location, output_dir refuses (returns None) and dependent paths too.
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    os.symlink(outside, proj / ".recall")
+    cwd = str(proj)
+
+    assert common.output_dir(cwd, {"output_dir": ".recall"}) is None
+    assert common.history_path(cwd, {"output_dir": ".recall"}) is None
+    assert common.ensure_output_dir(cwd, {"output_dir": ".recall"}) is None
+
+
+def test_capture_does_not_write_outside_via_symlinked_recall(tmp_path):
+    import capture
+
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    os.symlink(outside, proj / ".recall")
+
+    transcript = tmp_path / "t.jsonl"
+    transcript.write_text(
+        '{"type":"user","message":{"content":"do a thing"}}\n', encoding="utf-8"
+    )
+    capture.capture_session({"cwd": str(proj),
+                             "transcript_path": str(transcript),
+                             "session_id": "abc123"})
+
+    # Nothing must have been written into the symlink target.
+    assert list(outside.iterdir()) == []
+
+
 def test_locate_transcript_no_cross_project_fallback():
     assert common.locate_transcript("/nonexistent/project/zzz999") is None
 

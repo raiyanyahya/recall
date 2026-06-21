@@ -169,7 +169,10 @@ def run(cwd, transcript_path=None, quiet=False):
         return 1
 
     md = build(cwd, cfg, transcript_path)
-    ensure_output_dir(cwd, cfg)
+    if not ensure_output_dir(cwd, cfg):
+        if not quiet:
+            print("Recall: output dir escapes the project; refusing to write.")
+        return 1
     path = context_path(cwd, cfg)
     write_text(path, md)
 

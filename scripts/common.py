@@ -23,37 +23,48 @@ def read_hook_input():
 
 
 def output_dir(cwd, cfg):
-    """Resolve the output dir, confined to within cwd.
+    """Resolve the output dir, confined to within cwd, or None if none is safe.
 
     A project-local config is itself untrusted (it ships in the repo), so it must
     not be able to redirect writes outside the project via an absolute path or
-    `..`. Anything that escapes cwd falls back to the default `.recall`.
+    `..`. A pre-planted symlink at the default `.recall` is just as untrusted: an
+    escaping config value falls back to `.recall`, but if even that resolves
+    outside cwd (because `.recall` is a symlink), we return None and refuse to
+    write rather than land outside the project. Callers treat None as "skip".
     """
-    requested = cfg.get("output_dir", ".recall") or ".recall"
     base = os.path.realpath(cwd)
-    target = os.path.realpath(os.path.join(cwd, requested))
-    if target == base or target.startswith(base + os.sep):
-        return target
-    return os.path.realpath(os.path.join(cwd, ".recall"))
+    requested = cfg.get("output_dir", ".recall") or ".recall"
+    for candidate in (requested, ".recall"):
+        target = os.path.realpath(os.path.join(cwd, candidate))
+        if target == base or target.startswith(base + os.sep):
+            return target
+    return None
+
+
+def _in_output_dir(cwd, cfg, name):
+    d = output_dir(cwd, cfg)
+    return os.path.join(d, name) if d else None
 
 
 def context_path(cwd, cfg):
-    return os.path.join(output_dir(cwd, cfg), "context.md")
+    return _in_output_dir(cwd, cfg, "context.md")
 
 
 def history_path(cwd, cfg):
-    return os.path.join(output_dir(cwd, cfg), "history.md")
+    return _in_output_dir(cwd, cfg, "history.md")
 
 
 def state_path(cwd, cfg):
-    return os.path.join(output_dir(cwd, cfg), ".capture.json")
+    return _in_output_dir(cwd, cfg, ".capture.json")
 
 
 def pause_path(cwd, cfg):
-    return os.path.join(output_dir(cwd, cfg), ".capture-paused")
+    return _in_output_dir(cwd, cfg, ".capture-paused")
 
 
 def read_text(path):
+    if not path:
+        return ""
     try:
         with open(path, "r", encoding="utf-8") as fh:
             return fh.read()
@@ -63,6 +74,8 @@ def read_text(path):
 
 def ensure_output_dir(cwd, cfg):
     d = output_dir(cwd, cfg)
+    if not d:
+        return None
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -90,8 +103,11 @@ def append_text(path, data):
 
 
 def load_state(cwd, cfg):
+    path = state_path(cwd, cfg)
+    if not path:
+        return {}
     try:
-        with open(state_path(cwd, cfg), "r", encoding="utf-8") as fh:
+        with open(path, "r", encoding="utf-8") as fh:
             data = json.load(fh)
         return data if isinstance(data, dict) else {}
     except (OSError, ValueError):
@@ -100,7 +116,8 @@ def load_state(cwd, cfg):
 
 def save_state(cwd, cfg, state):
     try:
-        ensure_output_dir(cwd, cfg)
+        if not ensure_output_dir(cwd, cfg):
+            return
         write_text(state_path(cwd, cfg), json.dumps(state))
     except OSError:
         pass

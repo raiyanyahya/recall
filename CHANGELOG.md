@@ -6,6 +6,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-06-21
+
+### Security
+- Closed a path-confinement bypass in `output_dir`: a pre-planted symlink at the
+  default `.recall` (e.g. shipped in an untrusted clone) could redirect Recall's
+  writes outside the project, because the fallback re-resolved the same symlink.
+  The fallback is now validated too; when no in-project location is safe Recall
+  refuses to write (`output_dir` returns None) rather than landing outside the
+  tree. Added regression tests covering the symlinked-`.recall` case end to end.
+
 ## [0.3.1] - 2026-06-20
 
 ### Added
@@ -81,6 +91,7 @@ done by a vendored classical summarizer.
   transcript summarizer with selectable backends (Ollama by default, Claude API
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
-[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.2
 [0.3.1]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.1
 [0.3.0]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.0
