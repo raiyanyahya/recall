@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-06-23
+
+### Added
+- **Privacy policy** (`PRIVACY.md`), linked from the README. Documents that
+  Recall runs fully locally — no network access, telemetry, accounts, or
+  third-party/model calls, and all output stays under `.recall/` — and that the
+  built-in secret redaction is a best-effort safety net, not a guarantee.
+
 ## [0.3.4] - 2026-06-22
 
 ### Added
@@ -140,7 +148,8 @@ done by a vendored classical summarizer.
   transcript summarizer with selectable backends (Ollama by default, Claude API
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
-[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.5
 [0.3.4]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.4
 [0.3.3]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.3
 [0.3.2]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.2
