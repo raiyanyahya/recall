@@ -30,7 +30,8 @@
   credits).
 - **Nothing leaves your machine.** Your transcripts (code, paths, sometimes
   secrets) are never sent to any API. Most "memory" tools pipe your context to a
-  model endpoint; Recall makes a privacy guarantee they can't.
+  model endpoint; Recall makes a privacy guarantee they can't. See
+  [PRIVACY.md](PRIVACY.md) for the full policy.
 - **Zero-friction.** No `pip install`, no local model to run, no key to configure,
   works offline. It starts working the moment the plugin loads.
 
