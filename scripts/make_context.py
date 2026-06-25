@@ -13,6 +13,13 @@ import os
 import re
 import sys
 
+# Force UTF-8 stdout so printing paths with non-ASCII characters never raises
+# UnicodeEncodeError on Windows (default cp1252).
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import parse_transcript  # noqa: E402

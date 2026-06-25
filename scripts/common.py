@@ -5,6 +5,7 @@ third-party package and can never crash a session.
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -214,6 +215,11 @@ def _candidates(cwd):
     variants = [
         cwd.replace("/", "-"),
         cwd.replace("/", "-").replace(".", "-").replace("_", "-"),
+        # Windows: Claude Code encodes the drive colon, path separators and
+        # spaces to '-', e.g. 'C:\\projeto comprar carro' is stored under
+        # '~/.claude/projects/C--projeto-comprar-carro'. Without this variant
+        # locate_transcript() never matches on Windows.
+        re.sub(r"[:\\/ ]", "-", cwd),
     ]
     seen, out = set(), []
     for v in variants:

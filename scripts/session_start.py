@@ -13,6 +13,14 @@ never fails to start because of Recall.
 import os
 import sys
 
+# On Windows the default stdout encoding is cp1252, which raises
+# UnicodeEncodeError on the emoji/non-ASCII this hook prints — silently
+# swallowed below, so the recap never surfaces. Force UTF-8 defensively.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 

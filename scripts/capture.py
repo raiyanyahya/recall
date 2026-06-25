@@ -14,6 +14,13 @@ import datetime
 import os
 import sys
 
+# Force UTF-8 stdout so non-ASCII never raises UnicodeEncodeError on Windows
+# (default cp1252), where the bare except below would swallow it silently.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
