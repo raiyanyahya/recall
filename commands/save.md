@@ -9,8 +9,13 @@ local offline summarizer.
 Run with the Bash tool:
 
 ```
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/make_context.py" --cwd "$(pwd)"
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/make_context.py" || python "${CLAUDE_PLUGIN_ROOT}/scripts/make_context.py"
 ```
+
+(`make_context.py` defaults to the current directory, so no `--cwd` is needed —
+and on Windows passing the shell's `$(pwd)` would hand it a `/c/...` path that
+doesn't match the transcript dir. The `|| python` fallback covers Windows, where
+the interpreter is normally `python`, not `python3`.)
 
 Then report back:
 

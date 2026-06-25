@@ -5,6 +5,7 @@ third-party package and can never crash a session.
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -214,6 +215,12 @@ def _candidates(cwd):
     variants = [
         cwd.replace("/", "-"),
         cwd.replace("/", "-").replace(".", "-").replace("_", "-"),
+        # Claude Code names a project's transcript dir by replacing every
+        # non-alphanumeric char in the cwd with "-". On Windows the cwd carries a
+        # drive colon, backslashes and often spaces (C:\foo bar -> C--foo-bar)
+        # that the two variants above leave intact, so without this the dir is
+        # never matched and locate_transcript() returns None.
+        re.sub(r"[^a-zA-Z0-9]", "-", cwd),
     ]
     seen, out = set(), []
     for v in variants:

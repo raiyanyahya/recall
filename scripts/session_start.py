@@ -20,6 +20,15 @@ def main():
     from common import context_path, pause_path, read_hook_input, read_text
     from config import load_config
 
+    # Windows' default console encoding (cp1252) can't encode the 📒 and the saved
+    # context below; force UTF-8 so the recap actually prints instead of raising
+    # UnicodeEncodeError — which the bare except in __main__ would swallow, leaving
+    # the user with no recap and no clue why.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
     data = read_hook_input()
     cwd = data.get("cwd") or os.getcwd()
     cfg = load_config(cwd)

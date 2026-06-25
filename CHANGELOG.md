@@ -6,6 +6,32 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-06-25
+
+### Fixed
+- **Windows: the plugin no longer fails silently.** On a standard Windows install
+  (no `python3` on PATH, default cp1252 console) the hooks ran but captured and
+  surfaced nothing — every failure swallowed by the defensive `except` that keeps
+  Recall from ever crashing a session. Three independent OS-specific bugs, now
+  fixed (reported in #6):
+  - **`python3` not found.** `hooks.json` (all three hooks) and the `/recall:save`
+    command invoked `python3`, which the standard Windows installer doesn't
+    provide, so capture and the recap never ran. They now fall back to `python`
+    (`python3 … || python …`, valid in both `cmd` and POSIX `sh`).
+  - **Transcript directory never matched.** `locate_transcript()` didn't reproduce
+    Claude Code's Windows project-dir encoding (the drive colon, backslashes and
+    spaces all become `-`, e.g. `C:\foo bar` → `C--foo-bar`), so `/recall:save`
+    and the resume fallback reported "no session transcript found". The candidate
+    is now derived by replacing every non-alphanumeric character — which also
+    fixes Unix/macOS paths that contain spaces.
+  - **Recap crashed on emoji.** `session_start.py` prints a 📒 and the saved
+    context; under the default cp1252 console `print()` raised
+    `UnicodeEncodeError`, swallowed by the hook's bare `except`, so the recap
+    never surfaced even when `context.md` existed. stdout is now reconfigured to
+    UTF-8.
+- **Marketplace version resynced.** `.claude-plugin/marketplace.json` had been
+  left at 0.3.4 (missed in the 0.3.5 release); it now tracks `plugin.json` again.
+
 ## [0.3.5] - 2026-06-23
 
 ### Added
