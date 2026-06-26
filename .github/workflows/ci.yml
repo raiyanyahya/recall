@@ -58,7 +58,7 @@ jobs:
         # One representative cell is enough; uploading every matrix combination
         # just adds duplicate reports for the same line coverage.
         if: matrix.python-version == '3.12' && matrix.numpy == 'with-numpy'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
