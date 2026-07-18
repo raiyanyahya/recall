@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-18
+
 ### Added
 - **Opt-in OpenCode support** (#10). `python3 scripts/install.py --opencode`
   wires Recall into an [opencode](https://opencode.ai) project: a generated
@@ -21,6 +23,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   hooks, commands, and manifest; `make_context.py` defaults to
   `--harness claude` with identical behavior, and nothing activates unless the
   installer is explicitly run.
+- CI: an installer smoke test in the `validate` job guards the shipped
+  templates end-to-end — placeholder substitution, the generated shim parsing
+  as valid ESM, a parseable generated `opencode.json`, and a clean uninstall.
+
+### Changed
+- README: harness documentation restructured under an "Other harnesses"
+  section (how opencode plugin loading works, one-time setup, per-session
+  behavior), with an opencode badge.
 
 ## [0.3.6] - 2026-06-25
 
@@ -190,7 +200,9 @@ done by a vendored classical summarizer.
   transcript summarizer with selectable backends (Ollama by default, Claude API
   optional), writing `.recall/context.md` and `.recall/history.md`.
 
-[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/raiyanyahya/recall/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/raiyanyahya/recall/releases/tag/v0.4.0
+[0.3.6]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.6
 [0.3.5]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.5
 [0.3.4]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.4
 [0.3.3]: https://github.com/raiyanyahya/recall/releases/tag/v0.3.3
