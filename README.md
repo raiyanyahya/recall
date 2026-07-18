@@ -3,6 +3,7 @@
 
 <p align="center">
   <a href="https://claude.com/claude-code"><img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code-CC785C"></a>
+  <a href="#other-harnesses--opencode-opt-in"><img alt="OpenCode: opt-in support" src="https://img.shields.io/badge/opencode-opt--in-1a1a2e"></a>
   <a href="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml/badge.svg"></a>
   <a href="https://codecov.io/gh/raiyanyahya/recall"><img alt="Coverage" src="https://codecov.io/gh/raiyanyahya/recall/branch/master/graph/badge.svg"></a>
@@ -182,6 +183,51 @@ No `pip install` — the summarizer is vendored and stdlib-only (numpy used as a
 optional accelerator if present). Work a session, run `/recall:save`, and open
 a fresh session — Recall greets you with where you left off.
 
+## Other harnesses — OpenCode (opt-in)
+
+Claude Code is Recall's first-class harness — the plugin above is the primary,
+fully supported path, and nothing in this section touches it. But the memory
+files are harness-neutral, so Recall can also capture
+[opencode](https://opencode.ai) sessions into the same `.recall/history.md` /
+`context.md`.
+
+Support is **flag-based and explicitly opt-in** — nothing happens unless you
+run the installer against a project:
+
+```
+git clone https://github.com/raiyanyahya/recall ~/recall   # keep the clone; the shim points at it
+python3 ~/recall/scripts/install.py --opencode --project /path/to/your/project
+```
+
+The installer writes exactly three things, all inside the target project:
+
+| File | Purpose |
+|---|---|
+| `.opencode/plugins/recall.ts` | on every `session.idle`, append new activity to `.recall/history.md` — reads the session via `opencode export` (public CLI), never opencode's internal storage |
+| `.opencode/commands/recall-save.md` | `/recall-save` — regenerate `context.md` with the local summarizer |
+| `opencode.json` | adds `.recall/context.md` to `instructions`, so the saved context loads at session start |
+
+Same guarantees as the Claude Code path: fully local, no network, no API key;
+capture honors `recall.config.json`, `.capture-paused`, and redaction; any
+failure is a silent no-op so a session is never affected. Remove it all with
+`--opencode --uninstall` (your `.recall/` data stays). Files the installer
+didn't generate are never overwritten or deleted. Differences to know about:
+
+- **Instructions, not fenced data.** opencode loads `context.md` through its
+  `instructions` mechanism, without the untrusted-data fencing the Claude Code
+  SessionStart hook applies. If you commit `.recall/` as shared team memory,
+  only do so with collaborators you trust.
+- **Tracks opencode's public CLI** (`session list`, `export`, the plugin
+  events API), which is the stable surface — but opencode moves fast; if a
+  release changes these, capture degrades to a silent no-op. File an issue.
+- **Shared memory across harnesses.** A Claude Code user and an opencode user
+  on the same repo write to the same files — sessions from both land in one
+  `history.md`, and either side's `context.md` resumes the other's work.
+
+Codex and other harnesses aren't supported yet; the adapter seam
+(`scripts/harness_opencode.py`, `--harness` on `make_context.py`) is where
+they'd plug in.
+
 ## Development
 
 ```bash
@@ -218,11 +264,14 @@ recall/
 ├── commands/                    # /recall:save · show · log
 ├── scripts/
 │   ├── summarizer.py            # vendored TF-IDF + TextRank (numpy optional)
-│   ├── make_context.py          # build/overwrite context.md
+│   ├── make_context.py          # build/overwrite context.md (--harness claude|opencode)
 │   ├── capture.py               # append session activity to history.md
 │   ├── session_start.py         # surface context + ask the start questions
 │   ├── parse_transcript.py      # transcript → events + renderers
+│   ├── harness_opencode.py      # opencode adapter (public CLI only) + opencode_capture.py
+│   ├── install.py               # flag-based installer for opt-in harnesses (--opencode)
 │   └── config.py · common.py · redact.py
+├── integrations/opencode/       # generated-file templates (plugin shim, /recall-save)
 ├── tests/                       # pytest suite (summarizer, capture, security, …)
 ├── benchmarks/bench.py          # perf + quality harness (CI quality gate)
 ├── .github/                     # CI, CodeQL, secret scan, dependabot

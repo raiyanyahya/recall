@@ -25,9 +25,10 @@ omit = ["scripts/session_start.py"]
 
 [tool.bandit]
 # Reviewed and accepted, with justification:
-#  B404/B603/B607 — git is the only subprocess. It's invoked with a static argv
-#    list (never shell=True), found on PATH by name, and hardened against
-#    untrusted-repo config (see scripts/common.py:git_info).
+#  B404/B603/B607 — the only subprocesses are git and the opencode CLI. Both
+#    are invoked with a static argv list (never shell=True) and found on PATH
+#    by name; git is additionally hardened against untrusted-repo config (see
+#    scripts/common.py:git_info, scripts/harness_opencode.py:_run_opencode).
 #  B110 — the lifecycle hooks deliberately `except Exception: pass` so a failure
 #    in Recall can never crash a Claude Code session. This is a hard design
 #    requirement (see CONTRIBUTING.md), used only in hook entry points.

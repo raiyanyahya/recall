@@ -6,6 +6,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Opt-in OpenCode support** (#10). `python3 scripts/install.py --opencode`
+  wires Recall into an [opencode](https://opencode.ai) project: a generated
+  plugin shim captures every `session.idle` into the same `.recall/history.md`,
+  a `/recall-save` command regenerates `context.md` locally
+  (`make_context.py --harness opencode`), and `opencode.json` gains
+  `.recall/context.md` under `instructions` for session-start resume. Fully
+  reversible (`--uninstall`), and the installer never overwrites or deletes a
+  file it didn't generate. The adapter (`scripts/harness_opencode.py`) talks
+  only to opencode's public CLI (`session list`, `export`) — never its internal
+  storage — and filters sessions by project directory, preserving the
+  scoped-transcript guarantee. **The Claude Code path is untouched**: same
+  hooks, commands, and manifest; `make_context.py` defaults to
+  `--harness claude` with identical behavior, and nothing activates unless the
+  installer is explicitly run.
+
 ## [0.3.6] - 2026-06-25
 
 ### Fixed

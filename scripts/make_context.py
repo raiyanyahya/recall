@@ -130,9 +130,12 @@ def _facts_events(cwd, transcript_path, located_events):
     return located_events
 
 
-def build(cwd, cfg, transcript_path):
-    located = parse_transcript.parse(transcript_path)
-    events = _facts_events(cwd, transcript_path, located)
+def build(cwd, cfg, transcript_path, events=None):
+    """events=None is the Claude Code path (parse the .jsonl transcript);
+    a harness adapter passes pre-parsed events instead."""
+    if events is None:
+        located = parse_transcript.parse(transcript_path)
+        events = _facts_events(cwd, transcript_path, located)
 
     # Summarize the captured history if present (it's what the user expects to be
     # condensed); otherwise summarize the transcript prose directly.
@@ -184,15 +187,24 @@ _Generated locally by Recall — {summarizer.backend_name()}._
     return md
 
 
-def run(cwd, transcript_path=None, quiet=False):
+def run(cwd, transcript_path=None, quiet=False, harness="claude"):
     cfg = load_config(cwd)
-    transcript_path = transcript_path or locate_transcript(cwd)
-    if not transcript_path or not os.path.exists(transcript_path):
-        if not quiet:
-            print("Recall: no session transcript found; nothing to summarize.")
-        return 1
-
-    md = build(cwd, cfg, transcript_path)
+    if harness == "opencode":
+        import harness_opencode
+        _sid, events = harness_opencode.collect_events(cwd)
+        if not events:
+            if not quiet:
+                print("Recall: no opencode session found for this project; "
+                      "nothing to summarize.")
+            return 1
+        md = build(cwd, cfg, None, events=events)
+    else:
+        transcript_path = transcript_path or locate_transcript(cwd)
+        if not transcript_path or not os.path.exists(transcript_path):
+            if not quiet:
+                print("Recall: no session transcript found; nothing to summarize.")
+            return 1
+        md = build(cwd, cfg, transcript_path)
     if not ensure_output_dir(cwd, cfg):
         if not quiet:
             print("Recall: output dir escapes the project; refusing to write.")
@@ -211,9 +223,12 @@ def main():
     ap.add_argument("--cwd", default=os.getcwd())
     ap.add_argument("--transcript")
     ap.add_argument("--quiet", action="store_true")
+    ap.add_argument("--harness", choices=["claude", "opencode"], default="claude",
+                    help="which coding agent's session to summarize (default: claude)")
     args = ap.parse_args()
     try:
-        sys.exit(run(args.cwd, args.transcript, quiet=args.quiet))
+        sys.exit(run(args.cwd, args.transcript, quiet=args.quiet,
+                     harness=args.harness))
     except Exception as exc:
         print(f"Recall error: {exc}", file=sys.stderr)
         sys.exit(2)
