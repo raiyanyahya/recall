@@ -3,7 +3,7 @@
 
 <p align="center">
   <a href="https://claude.com/claude-code"><img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code-CC785C"></a>
-  <a href="#other-harnesses--opencode-opt-in"><img alt="OpenCode: opt-in support" src="https://img.shields.io/badge/opencode-opt--in-1a1a2e"></a>
+  <a href="#opencode"><img alt="OpenCode: opt-in support" src="https://img.shields.io/badge/opencode-opt--in-1a1a2e"></a>
   <a href="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/raiyanyahya/recall/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/raiyanyahya/recall/actions/workflows/codeql.yml/badge.svg"></a>
   <a href="https://codecov.io/gh/raiyanyahya/recall"><img alt="Coverage" src="https://codecov.io/gh/raiyanyahya/recall/branch/master/graph/badge.svg"></a>
@@ -183,35 +183,65 @@ No `pip install` — the summarizer is vendored and stdlib-only (numpy used as a
 optional accelerator if present). Work a session, run `/recall:save`, and open
 a fresh session — Recall greets you with where you left off.
 
-## Other harnesses — OpenCode (opt-in)
+## Other harnesses
 
-Claude Code is Recall's first-class harness — the plugin above is the primary,
-fully supported path, and nothing in this section touches it. But the memory
-files are harness-neutral, so Recall can also capture
-[opencode](https://opencode.ai) sessions into the same `.recall/history.md` /
-`context.md`.
+Claude Code is Recall's first-class harness — the plugin install above is the
+primary, fully supported path, and nothing in this section affects it. But the
+memory Recall writes is plain markdown in `.recall/`, not harness state, so
+other coding agents can produce and consume the very same files. Harness
+support is always **opt-in**: nothing activates unless you explicitly set it
+up. A nice consequence: memory is **shared across harnesses** — a Claude Code
+user and an opencode user on the same repo write to the same `history.md`,
+and either side's `context.md` resumes the other's work.
 
-Support is **flag-based and explicitly opt-in** — nothing happens unless you
-run the installer against a project:
+### OpenCode
+
+**How plugin installs work in opencode.** Unlike Claude Code, [opencode](https://opencode.ai)
+has no plugin marketplace and no in-CLI install command — there's no
+`/plugin install` to run inside it. Plugins are loaded from files and config:
+anything in a project's `.opencode/plugins/` (or the global
+`~/.config/opencode/plugins/`) is auto-loaded at startup, custom commands are
+markdown files in `.opencode/commands/`, and session-start context comes from
+the `instructions` list in `opencode.json`. Recall plugs into exactly those
+mechanisms — a small installer generates the files **once**, and opencode
+picks them up automatically from then on.
+
+**Set it up once per project** — not per session, not per machine boot:
 
 ```
-git clone https://github.com/raiyanyahya/recall ~/recall   # keep the clone; the shim points at it
+git clone https://github.com/raiyanyahya/recall ~/recall
 python3 ~/recall/scripts/install.py --opencode --project /path/to/your/project
 ```
+
+Keep the clone around — the generated plugin points at it. The only reason to
+ever re-run the installer is if you move the clone (or want to uninstall).
 
 The installer writes exactly three things, all inside the target project:
 
 | File | Purpose |
 |---|---|
-| `.opencode/plugins/recall.ts` | on every `session.idle`, append new activity to `.recall/history.md` — reads the session via `opencode export` (public CLI), never opencode's internal storage |
-| `.opencode/commands/recall-save.md` | `/recall-save` — regenerate `context.md` with the local summarizer |
-| `opencode.json` | adds `.recall/context.md` to `instructions`, so the saved context loads at session start |
+| `.opencode/plugins/recall.ts` | the capture shim, auto-loaded by opencode at startup |
+| `.opencode/commands/recall-save.md` | the `/recall-save` command |
+| `opencode.json` | adds `.recall/context.md` to `instructions` |
+
+**From then on, every session is automatic:**
+
+- **At session start**, opencode loads `.recall/context.md` (via
+  `instructions`) — you resume where you left off, no re-explaining.
+- **After every turn** (opencode's `session.idle` event), the shim appends new
+  activity to `.recall/history.md`. It reads the session through
+  `opencode export` — opencode's public CLI — never its internal storage.
+- **Before wrapping up**, run `/recall-save` to regenerate `context.md` with
+  the local summarizer — or set `auto_save_context: "on_end"` in
+  `recall.config.json` and it regenerates after every turn on its own.
 
 Same guarantees as the Claude Code path: fully local, no network, no API key;
 capture honors `recall.config.json`, `.capture-paused`, and redaction; any
-failure is a silent no-op so a session is never affected. Remove it all with
-`--opencode --uninstall` (your `.recall/` data stays). Files the installer
-didn't generate are never overwritten or deleted. Differences to know about:
+failure is a silent no-op so a session is never affected. Uninstall anytime
+with `--opencode --uninstall` (your `.recall/` data stays), and the installer
+never overwrites or deletes a file it didn't generate.
+
+Two differences from the Claude Code path to be aware of:
 
 - **Instructions, not fenced data.** opencode loads `context.md` through its
   `instructions` mechanism, without the untrusted-data fencing the Claude Code
@@ -220,13 +250,12 @@ didn't generate are never overwritten or deleted. Differences to know about:
 - **Tracks opencode's public CLI** (`session list`, `export`, the plugin
   events API), which is the stable surface — but opencode moves fast; if a
   release changes these, capture degrades to a silent no-op. File an issue.
-- **Shared memory across harnesses.** A Claude Code user and an opencode user
-  on the same repo write to the same files — sessions from both land in one
-  `history.md`, and either side's `context.md` resumes the other's work.
 
-Codex and other harnesses aren't supported yet; the adapter seam
-(`scripts/harness_opencode.py`, `--harness` on `make_context.py`) is where
-they'd plug in.
+### Codex and others
+
+Not supported yet. The adapter seam (`scripts/harness_opencode.py`,
+`--harness` on `make_context.py`) is where a new harness plugs in —
+contributions welcome.
 
 ## Development
 
