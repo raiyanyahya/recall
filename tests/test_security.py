@@ -92,3 +92,26 @@ def test_git_hardening_blocks_malicious_diff_external(tmp_path):
     info = common.git_info(cwd)  # runs git diff/log internally
     assert not marker.exists(), "malicious diff.external was executed"
     assert "git diff --stat" in info  # still produced real output
+
+
+def test_locate_transcript_prefers_own_session_over_newest(tmp_path, monkeypatch):
+    # /recall:save used to take the NEWEST transcript in the project dir, i.e.
+    # whichever parallel session wrote last. With the session id known it must
+    # return that session's own file even when a peer's is newer.
+    import time
+    home = tmp_path / "home"
+    cwd = str(tmp_path / "proj")
+    tdir = home / ".claude" / "projects" / "p"      # short: Windows MAX_PATH
+    monkeypatch.setattr(common, "_candidates", lambda c: ["p"])
+    tdir.mkdir(parents=True)
+    mine = tdir / "11111111-mine.jsonl"
+    mine.write_text("{}")
+    time.sleep(0.05)
+    (tdir / "22222222-peer.jsonl").write_text("{}")      # newer
+    monkeypatch.setattr(common.Path, "home", classmethod(lambda cls: home))
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "11111111-mine")
+    assert common.locate_transcript(cwd) == str(mine)
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "99999999-missing")
+    assert common.locate_transcript(cwd) is None, "a known id with no file must not guess"
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID")
+    assert common.locate_transcript(cwd).endswith("22222222-peer.jsonl"), "no id: newest, as before"

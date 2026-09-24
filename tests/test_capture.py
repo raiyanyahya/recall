@@ -7,7 +7,11 @@ from config import load_config
 
 
 def _history(cwd):
-    return common.read_text(common.history_path(cwd, load_config(cwd)))
+    """Every per-session log in this (single-test) project, concatenated."""
+    d = os.path.join(common.output_dir(cwd, load_config(cwd)), "history")
+    if not os.path.isdir(d):
+        return ""
+    return "".join(common.read_text(os.path.join(d, f)) for f in sorted(os.listdir(d)))
 
 
 def test_incremental_capture_dedupes_header_and_redacts(tmp_path):
@@ -83,3 +87,30 @@ def test_corrupt_offset_state_does_not_crash_capture(tmp_path):
     make_jsonl(t, [user("recover cleanly"), assistant("ok")])
     run_capture(cwd, t, "sessGGGG7777")
     assert "recover cleanly" in _history(cwd)
+
+
+def test_parallel_sessions_log_to_separate_files(tmp_path):
+    # Two sessions in one project folder, turns interleaved: each must land in
+    # its own file and never in the other one (they shared history.md before).
+    cwd = str(tmp_path)
+    ta = os.path.join(cwd, "aaaa1111-x.jsonl")
+    tb = os.path.join(cwd, "bbbb2222-y.jsonl")
+    make_jsonl(ta, [user("session A builds the invoice report")])
+    run_capture(cwd, ta, "aaaa1111-x")
+    make_jsonl(tb, [user("session B fixes the payroll import")])
+    run_capture(cwd, tb, "bbbb2222-y")
+    make_jsonl(ta, [user("session A builds the invoice report"), assistant("A adds totals")])
+    run_capture(cwd, ta, "aaaa1111-x")
+    cfg = load_config(cwd)
+    a = common.read_text(common.history_path(cwd, cfg, "aaaa1111-x"))
+    b = common.read_text(common.history_path(cwd, cfg, "bbbb2222-y"))
+    assert "invoice report" in a and "A adds totals" in a and "payroll" not in a
+    assert "payroll import" in b and "invoice" not in b
+    assert a.count("## Session") == 1
+    assert not os.path.exists(common.history_path(cwd, cfg)), "shared history.md was written"
+
+
+def test_session_id_cannot_escape_history_dir(tmp_path):
+    cwd = str(tmp_path)
+    p = common.history_path(cwd, load_config(cwd), "../../etc/passwd")
+    assert os.path.dirname(p).endswith("history") and ".." not in os.path.basename(p)

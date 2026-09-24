@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Stop / SessionEnd hook: append new session activity to .recall/history.md.
+"""Stop / SessionEnd hook: append new session activity to .recall/history/<id8>.md
+(one file per session - parallel sessions in one folder used to interleave in a
+single history.md).
 
 history.md is the append-only running log of everything done. We track how many
 transcript lines we've already captured per session (in .recall/.capture.json)
@@ -85,7 +87,10 @@ def capture_session(data):
         complete.decode("utf-8", "replace").splitlines())
     if events:
         ensure_output_dir(cwd, cfg)
-        hist = history_path(cwd, cfg)
+        hist = history_path(cwd, cfg, session_id)   # this session's own file
+        if not hist:
+            return
+        os.makedirs(os.path.dirname(hist), exist_ok=True)
         prefix = ""
         if not os.path.exists(hist):
             prefix += f"# Recall History — {project_name(cwd)}\n"

@@ -42,7 +42,9 @@ def main():
 
     if cfg.get("capture_history", True) and not paused:
         lines.append(
-            f"- This session is being logged locally to `{out_dir}/history.md`. "
+            "- This session is being logged locally to "
+            f"`{out_dir}/history/{(data.get('session_id') or 'session')[:8]}.md` "
+            "(one file per session). "
             "Ask the user if they'd like to keep logging this session; if not, "
             f"create the file `{out_dir}/.capture-paused` to pause it."
         )

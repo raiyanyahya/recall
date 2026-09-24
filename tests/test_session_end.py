@@ -20,7 +20,7 @@ def test_session_end_captures_but_does_not_autosave_by_default(tmp_path):
     t = _transcript(cwd)
     run_session_end(cwd, t, "sessFFFF6666")
     cfg = load_config(cwd)
-    assert os.path.exists(common.history_path(cwd, cfg))      # history captured
+    assert os.path.exists(common.history_path(cwd, cfg, "sessFFFF6666"))  # history captured
     assert not os.path.exists(common.context_path(cwd, cfg))  # but no auto-save
 
 

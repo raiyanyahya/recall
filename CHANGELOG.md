@@ -6,6 +6,26 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **`context.md` describes the session being saved, even with parallel sessions.**
+  Several Claude Code sessions often run in one project folder. Three fixes:
+  - **The summary comes from the session's own transcript**, not the cumulative
+    `history.md`, which mixed older sessions' work into the one being saved.
+  - **Each session logs to its own file**, `.recall/history/<id8>.md`. All
+    sessions used to append to one `history.md`, so their turns interleaved and no
+    slice of it was reliably one session. The id is sanitised to 8 safe
+    characters and cannot name a path outside `history/`.
+  - **`/recall:save` saves its own session.** It took the newest `.jsonl` in the
+    project's transcript dir, i.e. whichever parallel session wrote last. It now
+    uses `CLAUDE_CODE_SESSION_ID`; a known id with no transcript returns nothing
+    rather than a guess, and without an id it falls back to the newest file as
+    before. Each save also writes `.recall/context/<id8>.md`, so a parallel
+    session's save cannot overwrite it; `context.md` stays the latest save.
+- **Goal skips image-only messages.** A session that opened with a pasted
+  screenshot got a temp-file path (`[Image: source: …png]`) as its Goal.
+- The session-slice test moved from `scripts/` to `tests/` (bandit flagged its
+  asserts, and it did not run under pytest).
+
 ## [0.4.0] - 2026-07-18
 
 ### Added

@@ -9,6 +9,7 @@ An event is a dict:
 """
 
 import json
+import re
 
 _TOOL_ARG = {
     "Edit": "file_path",
@@ -158,10 +159,19 @@ def commands(events):
     return out
 
 
+# A pasted screenshot reaches the transcript as "[Image: source: C:\...png]". A
+# message that is ONLY that says nothing about the goal - it made Goal a temp-file
+# path whenever a session opened with a screenshot.
+_IMAGE_REF = re.compile(r"\[Image\b[^\]]*\]")
+
+
 def first_user_goal(events):
+    """First user message with real text; image placeholders are dropped."""
     for ev in events:
         if ev["role"] == "user" and ev["text"]:
-            return " ".join(ev["text"].split())
+            text = " ".join(_IMAGE_REF.sub(" ", ev["text"]).split())
+            if text:
+                return text
     return ""
 
 

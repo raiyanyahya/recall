@@ -51,8 +51,30 @@ def context_path(cwd, cfg):
     return _in_output_dir(cwd, cfg, "context.md")
 
 
-def history_path(cwd, cfg):
+def history_path(cwd, cfg, session_id=None):
+    """With a session id: that session's OWN log, .recall/history/<id8>.md.
+
+    Several sessions often run in one project folder at once. When they all
+    appended to one history.md, each session's turns landed inside another
+    session's block and no summary of it was reliably one session. A file per
+    session is per-session by construction. Without an id: the legacy shared file.
+    """
+    sid = _short_sid(session_id)
+    if sid:
+        return _in_output_dir(cwd, cfg, os.path.join("history", sid + ".md"))
     return _in_output_dir(cwd, cfg, "history.md")
+
+
+def session_context_path(cwd, cfg, session_id):
+    """This session's own saved context, .recall/context/<id8>.md, so a later save
+    by a parallel session never overwrites it. context.md stays the latest save."""
+    sid = _short_sid(session_id)
+    return _in_output_dir(cwd, cfg, os.path.join("context", sid + ".md")) if sid else None
+
+
+def _short_sid(session_id):
+    """First 8 safe chars of a session id; never a path separator or '..'."""
+    return re.sub(r"[^0-9A-Za-z-]", "", str(session_id or ""))[:8]
 
 
 def state_path(cwd, cfg):
@@ -230,11 +252,30 @@ def _candidates(cwd):
     return out
 
 
-def locate_transcript(cwd):
-    """Find the current session transcript when a hook didn't provide one."""
+def locate_transcript(cwd, session_id=None):
+    """Find the current session transcript when a hook didn't provide one.
+
+    Claude Code puts CLAUDE_CODE_SESSION_ID in every tool call's environment, so
+    /recall:save can name ITS OWN transcript. Taking the newest .jsonl instead
+    picked whichever parallel session in the folder wrote last, and saved that
+    session's goal and state under this one (2026-09-24). The id is globally
+    unique, so matching it exactly in any project dir cannot pick the wrong one.
+    Known id but no file -> None, never a guess. No id -> newest, as before.
+    """
     projects = Path.home() / ".claude" / "projects"
     if not projects.is_dir():
         return None
+    raw = session_id or os.environ.get("CLAUDE_CODE_SESSION_ID") or ""
+    sid = re.sub(r"[^0-9A-Za-z-]", "", str(raw))
+    if sid:
+        for name in _candidates(cwd):
+            hit = projects / name / (sid + ".jsonl")
+            if hit.is_file():
+                return str(hit)
+        try:
+            return next((str(p) for p in projects.glob("*/" + sid + ".jsonl")), None)
+        except OSError:
+            return None
     for name in _candidates(cwd):
         cand = projects / name
         if cand.is_dir():
